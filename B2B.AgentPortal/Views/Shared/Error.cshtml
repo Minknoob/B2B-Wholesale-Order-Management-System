@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Lỗi xử lý yêu cầu";
+}
+
+<div class="portal-panel p-4 p-md-5 mx-auto" style="max-width: 640px;">
+    <h1 class="h3 mb-3">Không thể hoàn tất yêu cầu</h1>
+    <p class="text-secondary measure-prose mb-4">
+        Hệ thống gặp sự cố ngoài ý muốn khi xử lý yêu cầu của bạn. Không có thông tin nhạy cảm hoặc chi tiết nội bộ nào được hiển thị. Vui lòng thử lại hoặc quay về trang danh mục.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-b2b-primary px-4">
+            Quay về Danh mục hàng hóa
+        </a>
+        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary px-4">
+            Trang đăng nhập
+        </a>
+    </div>
+</div>

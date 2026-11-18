@@ -1,0 +1,30 @@
+﻿B2B WHOLESALE M3 - AUTOMATED SQL SERVER VERIFICATION LOG
+Executed At: 2026-11-18 18:31:17 +07:00
+Target Database: Server=.\SQLEXPRESS;Database=B2BWholesale;Trusted_Connection=True;TrustServerCertificate=True;
+==============================================================================
+
+[PART 1] AGENT LOGIN & LOCKOUT VERIFICATION (B2B.Core + AgentAuthenticationService)
+AUTH-01 | Agent01 Valid Login  -> Succeeded=True, AgentId=1, AgentName=An Phat Trading
+AUTH-02 | Admin Web Rejected   -> Succeeded=False, Reason=AdminRoleDenied
+AUTH-03 | Wrong Password #1    -> Succeeded=False, Reason=InvalidCredentials, FailedLoginCount=1, IsLocked=False
+AUTH-03 | Wrong Password #2    -> Succeeded=False, Reason=InvalidCredentials, FailedLoginCount=2, IsLocked=False
+AUTH-03 | Wrong Password #3    -> Succeeded=False, Reason=AccountLocked, FailedLoginCount=3, IsLocked=True
+AUTH-04 | Locked + Valid Pass  -> Succeeded=False, Reason=AccountLocked
+
+[PART 2] 15 ORDER TRANSACTION SCENARIOS (OrderService.PlaceOrderAsync)
+TC-01 | PASS=True | Stock#1: 120->115 | Orders: 20->21 | Details: 30->31 | OrderId=21, Total=475,000.00
+TC-02 | PASS=True | Stock#2: 85->81, Stock#6: 45->43 | Orders: 21->22 | Details: 31->33 | OrderId=22, Total=398,000.00
+TC-03 | PASS=True | Stock#11: 35->0 | Orders: 22->23 | Details: 33->34 | OrderId=23, Total=2,730,000.00
+TC-04 | PASS=True | Stock#15: 40->40 | Orders: 23->23 | Err=InsufficientStock
+TC-05 | PASS=True | Stock#3: 70->70 | Orders: 23->23 | Err=InvalidQuantity
+TC-06 | PASS=True | Stock#3: 70->70 | Orders: 23->23 | Err=InvalidQuantity
+TC-07 | PASS=True | Stock#3: 70->45 | Orders: 23->24 | Details: 34->35 | OrderId=24, MergedLines=1, Total=650,000.00
+TC-08 | PASS=True | Stock#3: 45->45 | Orders: 24->24 | Err=InsufficientStock
+TC-09 | PASS=True | Stock#4: 95->95 | Orders: 24->24 | Err=InvalidItem
+TC-10 | PASS=True | Stock#4: 95->95, Stock#15: 40->40 | Orders: 24->24 | Details: 35->35 | Err=InsufficientStock
+TC-11 | PASS=True | Stock#5: 200->200 | Orders: 24->24 | Details: 35->35 | Err=UnexpectedFailure
+TC-12 | PASS=True | Stock#15: 40->10 | Orders: 24->25 | Success=1, Blocked=1
+TC-13 | PASS=True | Stock#8: 60->57 | Orders: 25->26 | OrderId=27, UnitAmount=61,000.00, Total=183,000.00
+TC-14 | PASS=True | Stock#7: 110->110 | Orders: 26->26
+TC-15 | PASS=True | Orders: 26->26 | Err=EmptyOrder
+

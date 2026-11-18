@@ -1,0 +1,63 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập Đại lý";
+    string? authNotice = TempData["AuthNotice"] as string;
+    string? authError = TempData["AuthError"] as string;
+}
+
+<div class="login-shell">
+    <div class="portal-panel p-4 p-md-5">
+        <h1 class="h3 mb-2">Đăng nhập Cổng Đại lý</h1>
+        <p class="text-secondary mb-4">
+            Dành riêng cho đối tác phân phối có vai trò Agent đã đăng ký trong hệ thống B2B Wholesale.
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(authNotice))
+        {
+            <div class="portal-alert portal-alert-success mb-3" role="status">
+                @authNotice
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(authError))
+        {
+            <div class="portal-alert portal-alert-danger mb-3" role="alert">
+                @authError
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="portal-alert portal-alert-danger mb-3" role="alert"></div>
+        }
+
+        <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="mb-3">
+                <label asp-for="UserName" class="form-label fw-semibold"></label>
+                <input asp-for="UserName" class="form-control" autocomplete="username" placeholder="Ví dụ: agent01" autofocus />
+                <span asp-validation-for="UserName" class="text-danger small d-block mt-1"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Password" class="form-label fw-semibold"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" placeholder="Nhập mật khẩu" />
+                <span asp-validation-for="Password" class="text-danger small d-block mt-1"></span>
+            </div>
+
+            <button type="submit" class="btn btn-b2b-primary w-100 py-2">
+                Đăng nhập vào Agent Portal
+            </button>
+        </form>
+
+        <hr class="my-4" />
+        <p class="small text-secondary mb-0">
+            Lưu ý bảo mật: Tài khoản sẽ bị khóa sau 3 lần nhập sai mật khẩu liên tiếp và cần Quản trị viên mở khóa. Tài khoản Admin sử dụng ứng dụng WinForms nội bộ.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
