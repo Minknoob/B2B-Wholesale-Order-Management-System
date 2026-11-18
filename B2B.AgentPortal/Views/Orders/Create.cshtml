@@ -1,0 +1,157 @@
+@using System.Text.Json
+@model CreateOrderViewModel
+@{
+    ViewData["Title"] = "Tạo đơn đặt hàng bán sỉ";
+    bool hasAnyOrderableItem = Model.AvailableItems.Any(i => i.IsInStock);
+    string catalogJson = JsonSerializer.Serialize(
+        Model.AvailableItems.Select(i => new
+        {
+            itemId = i.ItemID,
+            itemName = i.ItemName,
+            size = i.Size,
+            price = i.Price,
+            stockQuantity = i.StockQuantity
+        }));
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Tạo đơn đặt hàng bán sỉ (Master-Detail)</h1>
+        <p class="text-secondary mb-0 measure-prose">
+            Đại lý đặt hàng: <strong>@Model.AgentDisplayName</strong>. Đơn giá trên biểu mẫu là giá tham khảo; hệ thống tự động chốt đơn giá hiện hành từ cơ sở dữ liệu và kiểm tra tồn kho trong một giao dịch nguyên tử.
+        </p>
+    </div>
+    <div>
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-secondary">
+            Quay lại Danh mục
+        </a>
+    </div>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="portal-alert portal-alert-danger mb-4" role="alert">
+        <div class="fw-bold mb-1">Không thể tạo đơn đặt hàng:</div>
+        <div asp-validation-summary="All" class="mb-0"></div>
+    </div>
+}
+
+<div id="clientDuplicateWarning" class="portal-alert portal-alert-danger mb-4 d-none" role="alert"></div>
+
+@if (!hasAnyOrderableItem)
+{
+    <div class="portal-panel empty-state-box">
+        <h2 class="h5 mb-2">Hiện không có mặt hàng nào còn tồn kho</h2>
+        <p class="mb-3">Tất cả sản phẩm trong kho đều đã hết hàng nên tạm thời chưa thể tạo đơn mới.</p>
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-primary">Xem danh mục</a>
+    </div>
+}
+else
+{
+    <form id="createOrderForm" asp-controller="Orders" asp-action="Create" method="post" novalidate>
+
+        <div class="portal-panel overflow-hidden">
+            <div class="p-3 p-md-4 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                <div>
+                    <h2 class="h5 mb-0">Chi tiết các dòng sản phẩm</h2>
+                    <small class="text-secondary">Nếu một mặt hàng xuất hiện ở nhiều dòng, hệ thống sẽ tự động cộng gộp số lượng khi kiểm tra tồn kho.</small>
+                </div>
+                <button type="button" id="btnAddOrderLine" class="btn btn-outline-primary btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Thêm dòng sản phẩm</span>
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table portal-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 56px;">#</th>
+                            <th scope="col" style="min-width: 260px;">Mặt hàng</th>
+                            <th scope="col">Quy cách</th>
+                            <th scope="col" class="text-end">Tồn kho hiện tại</th>
+                            <th scope="col" class="text-end">Đơn giá tham khảo</th>
+                            <th scope="col" class="text-end" style="width: 140px;">Số lượng đặt</th>
+                            <th scope="col" class="text-end">Thành tiền tham khảo</th>
+                            <th scope="col" class="text-end" style="width: 90px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderLinesBody">
+                        @for (int i = 0; i < Model.Lines.Count; i++)
+                        {
+                            int selectedId = Model.Lines[i].ItemID;
+                            int selectedQty = Model.Lines[i].Quantity;
+                            CatalogItemViewModel? matchedItem = Model.AvailableItems.FirstOrDefault(x => x.ItemID == selectedId);
+
+                            <tr class="order-line-row">
+                                <td class="text-secondary fw-semibold tabular-nums line-index">@(i + 1)</td>
+                                <td>
+                                    <select name="Lines[@i].ItemID" id="Lines_@(i)__ItemID" class="form-select item-select" required>
+                                        <option value="0">-- Chọn mặt hàng --</option>
+                                        @foreach (CatalogItemViewModel item in Model.AvailableItems)
+                                        {
+                                            bool isSelected = item.ItemID == selectedId;
+                                            bool disableOption = !item.IsInStock && !isSelected;
+                                            string suffix = item.IsInStock
+                                                ? $" (Tồn: {item.StockQuantity})"
+                                                : " [Hết hàng]";
+                                            <option value="@item.ItemID" selected="@(isSelected ? "selected" : null)" disabled="@(disableOption ? "disabled" : null)">
+                                                @item.ItemName — @item.Size@suffix
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Lines[i].ItemID" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td class="text-secondary line-size">@(matchedItem?.Size ?? "—")</td>
+                                <td class="text-end tabular-nums line-stock">@(matchedItem is not null ? matchedItem.StockQuantity.ToString("N0") : "—")</td>
+                                <td class="text-end tabular-nums line-unit-price">@(matchedItem is not null ? $"{matchedItem.Price:N0} ₫" : "0 ₫")</td>
+                                <td style="width: 140px;">
+                                    <input type="number" name="Lines[@i].Quantity" id="Lines_@(i)__Quantity"
+                                           value="@selectedQty" min="1" step="1"
+                                           class="form-control text-end tabular-nums qty-input" required />
+                                    <span asp-validation-for="Lines[i].Quantity" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td class="text-end fw-semibold tabular-nums line-subtotal">
+                                    @(matchedItem is not null && selectedQty > 0 ? $"{(matchedItem.Price * selectedQty):N0} ₫" : "0 ₫")
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-line"
+                                            disabled="@(Model.Lines.Count <= 1 ? "disabled" : null)"
+                                            title="Xóa dòng này" aria-label="Xóa dòng sản phẩm">
+                                        Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="order-summary-strip d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div class="text-secondary small tabular-nums">
+                    Số mặt hàng khác nhau: <strong id="orderDistinctCount">0</strong> · Tổng đơn vị hàng hóa: <strong id="orderTotalUnits">0</strong>
+                </div>
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                    <div class="text-sm-end">
+                        <span class="text-secondary small d-block">Tổng tiền tham khảo</span>
+                        <span id="orderGrandTotal" class="fs-4 fw-bold tabular-nums">0 ₫</span>
+                    </div>
+                    <button type="submit" class="btn btn-b2b-primary px-4 py-2">
+                        Gửi đơn đặt hàng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        window.b2bCatalogItems = @Html.Raw(catalogJson);
+    </script>
+    <script src="~/js/order-form.js" asp-append-version="true"></script>
+}

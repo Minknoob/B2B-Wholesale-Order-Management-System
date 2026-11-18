@@ -1,0 +1,97 @@
+@model OrderConfirmationViewModel
+@{
+    ViewData["Title"] = $"Xác nhận đơn hàng #{Model.OrderID}";
+    string? successBanner = TempData["OrderSuccessMessage"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(successBanner))
+{
+    <div class="portal-alert portal-alert-success mb-4 d-flex align-items-center gap-2" role="status">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span class="fw-semibold">@successBanner</span>
+    </div>
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h1 class="h2 mb-1 tabular-nums">Xác nhận đơn đặt hàng #@Model.OrderID</h1>
+        <p class="text-secondary mb-0">
+            Đơn hàng và tồn kho tương ứng đã được cập nhật thành công trong cơ sở dữ liệu.
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Orders" asp-action="Create" class="btn btn-b2b-primary">
+            Tạo đơn hàng mới
+        </a>
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-secondary">
+            Về Danh mục hàng hóa
+        </a>
+    </div>
+</div>
+
+<div class="portal-panel overflow-hidden">
+    <div class="p-4 border-bottom">
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="text-secondary small">Mã đơn hàng (OrderID)</div>
+                <div class="fw-bold fs-5 tabular-nums">#@Model.OrderID</div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="text-secondary small">Thời gian đặt (OrderDate)</div>
+                <div class="fw-semibold tabular-nums">@Model.OrderDate.ToString("yyyy-MM-dd HH:mm:ss")</div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="text-secondary small">Trạng thái đơn (OrderStatus)</div>
+                <div class="mt-1">
+                    <span class="status-badge status-pending">@Model.OrderStatus</span>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="text-secondary small">Đại lý đặt hàng (Agent)</div>
+                <div class="fw-semibold">@Model.AgentName <span class="text-secondary fw-normal tabular-nums">(#@Model.AgentID)</span></div>
+                <div class="small text-secondary">@Model.AgentPhone · @Model.AgentAddress</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table portal-table">
+            <thead>
+                <tr>
+                    <th scope="col" style="width: 80px;">Mã SP</th>
+                    <th scope="col">Mặt hàng</th>
+                    <th scope="col">Quy cách (Size)</th>
+                    <th scope="col" class="text-end">Số lượng</th>
+                    <th scope="col" class="text-end">Đơn giá chốt (UnitAmount)</th>
+                    <th scope="col" class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (OrderLineResultViewModel line in Model.Lines)
+                {
+                    <tr>
+                        <td class="text-secondary tabular-nums">#@line.ItemID</td>
+                        <td class="fw-semibold">@line.ItemName</td>
+                        <td class="text-secondary">@line.Size</td>
+                        <td class="text-end tabular-nums">@line.Quantity.ToString("N0")</td>
+                        <td class="text-end tabular-nums">@line.UnitAmount.ToString("N0") ₫</td>
+                        <td class="text-end fw-semibold tabular-nums">@line.LineTotal.ToString("N0") ₫</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="order-summary-strip d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+        <span class="text-secondary small tabular-nums">
+            Tổng số dòng mặt hàng đã chốt: <strong>@Model.Lines.Count</strong>
+        </span>
+        <div class="text-sm-end">
+            <span class="text-secondary small d-block">Tổng giá trị đơn hàng (TotalAmount)</span>
+            <span class="fs-4 fw-bold tabular-nums">@Model.TotalAmount.ToString("N0") ₫</span>
+        </div>
+    </div>
+</div>
