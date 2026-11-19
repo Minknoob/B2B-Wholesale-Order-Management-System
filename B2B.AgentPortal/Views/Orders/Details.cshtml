@@ -1,0 +1,90 @@
+@model OrderDetailVm
+@{
+    ViewData["Title"] = $"Đơn #{Model.OrderId}";
+    string Badge(string s) => s switch
+    {
+        "Pending"   => "text-bg-warning",
+        "Confirmed" => "text-bg-info",
+        "Shipped"   => "text-bg-primary",
+        "Delivered" => "text-bg-success",
+        "Cancelled" => "text-bg-secondary",
+        _           => "text-bg-light"
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <a asp-action="Index" class="text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i>My Orders
+        </a>
+        <h1 class="h3 mt-1 mb-0 tabular-nums">Đơn #@Model.OrderId</h1>
+    </div>
+    <a class="btn btn-b2b-primary" asp-action="Invoice" asp-route-id="@Model.OrderId" target="_blank" rel="noopener">
+        <i class="bi bi-printer me-1"></i>In hóa đơn
+    </a>
+</div>
+
+<div class="portal-panel p-3 p-md-4 mb-4">
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="meta">
+                <span class="meta-label">Ngày đặt</span>
+                <span class="fw-semibold tabular-nums">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="meta">
+                <span class="meta-label">Trạng thái</span>
+                <span class="badge @Badge(Model.OrderStatus) mt-1">@Model.OrderStatus</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="meta">
+                <span class="meta-label">Đại lý</span>
+                <span class="fw-semibold">@Model.AgentName</span>
+                @if (!string.IsNullOrWhiteSpace(Model.AgentPhone))
+                {
+                    <div class="small text-secondary">@Model.AgentPhone</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.AgentAddress))
+                {
+                    <div class="small text-secondary">@Model.AgentAddress</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="portal-panel overflow-hidden">
+    <div class="table-responsive">
+        <table class="table portal-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Mặt hàng</th>
+                    <th>Kích cỡ</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model.Lines)
+                {
+                    <tr>
+                        <td class="fw-semibold">@l.ItemName</td>
+                        <td class="text-secondary">@l.Size</td>
+                        <td class="text-end tabular-nums">@l.Quantity.ToString("N0")</td>
+                        <td class="text-end tabular-nums">@l.UnitAmount.ToString("N0") ₫</td>
+                        <td class="text-end fw-semibold tabular-nums">@l.LineTotal.ToString("N0") ₫</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4" class="text-end">Tổng tiền</th>
+                    <th class="text-end fs-5 tabular-nums">@Model.Total.ToString("N0") ₫</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

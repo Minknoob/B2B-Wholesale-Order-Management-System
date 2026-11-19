@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Từ chối truy cập";
+}
+
+<div class="portal-panel p-4 p-md-5 mx-auto" style="max-width: 640px;">
+    <h1 class="h3 mb-3">Từ chối quyền truy cập (403)</h1>
+    <p class="text-secondary measure-prose mb-4">
+        Bạn không có quyền xem tài nguyên này. Cổng đặt hàng chỉ cho phép tài khoản có vai trò Agent và chỉ cho phép truy cập đơn hàng thuộc chính Đại lý đang đăng nhập.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-b2b-primary px-4">
+            Về Danh mục hàng hóa
+        </a>
+        <a asp-controller="Orders" asp-action="Create" class="btn btn-outline-secondary px-4">
+            Tạo đơn hàng mới
+        </a>
+    </div>
+</div>
