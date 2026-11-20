@@ -18,7 +18,6 @@ public class MainForm : Form
             Location = new Point(45, 55)
         };
 
-        // Button to open M2
         var m2Button = new Button
         {
             Text = "M2 - Warehouse Administration",
