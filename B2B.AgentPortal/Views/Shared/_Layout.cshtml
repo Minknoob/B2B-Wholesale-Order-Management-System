@@ -1,0 +1,98 @@
+@using System.Security.Claims
+@{
+    string? currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    string? currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    bool isAgentAuthenticated = User.TryGetAgentId(out int currentAgentId);
+    string? agentName = User.FindFirstValue(AgentPortalClaims.AgentNameClaimType);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - B2B Wholesale Agent Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark portal-navbar py-2">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Catalog" asp-action="Index">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <span>B2B Agent Portal</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#portalNavbarContent"
+                        aria-controls="portalNavbarContent" aria-expanded="false" aria-label="Mở menu điều hướng">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="portalNavbarContent">
+                    @if (isAgentAuthenticated)
+                    {
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
+                            <li class="nav-item">
+                                <a class="nav-link @(string.Equals(currentController, "Catalog", StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                                   asp-controller="Catalog" asp-action="Index">
+                                    Danh mục hàng hóa (Catalog)
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(string.Equals(currentController, "Orders", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Create", StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                                   asp-controller="Orders" asp-action="Create">
+                                    Tạo đơn đặt sỉ (Create Order)
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-2 mt-lg-0">
+                            <span class="agent-identity-pill tabular-nums">
+                                @(string.IsNullOrWhiteSpace(agentName) ? User.Identity?.Name : $"{agentName} ({User.Identity?.Name})") · Mã ĐL #@currentAgentId
+                            </span>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-light btn-sm px-3">
+                                    Đăng xuất
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link @(string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                                   asp-controller="Account" asp-action="Login">
+                                    Đăng nhập (Login)
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="container py-4 my-1">
+        @RenderBody()
+    </main>
+
+    <footer class="portal-footer py-3">
+        <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-1">
+            <span>B2B Wholesale Order Management System — Agent Portal</span>
+            <span> Giao dịch tồn kho nguyên tử (EF Core + SQL Server)</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

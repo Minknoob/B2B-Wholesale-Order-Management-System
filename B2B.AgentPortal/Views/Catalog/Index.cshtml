@@ -1,0 +1,137 @@
+@model CatalogIndexViewModel
+@{
+    ViewData["Title"] = "Danh mục hàng hóa bán sỉ";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Danh mục hàng hóa bán sỉ</h1>
+        <p class="text-secondary mb-0 measure-prose">
+            Tra cứu quy cách, đơn giá hiện hành và số lượng tồn kho thực tế. Các mặt hàng hết tồn kho tự động khóa đặt hàng.
+        </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a asp-controller="Orders" asp-action="Create" class="btn btn-b2b-primary px-4 py-2 d-inline-flex align-items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Tạo đơn nhiều mặt hàng</span>
+        </a>
+    </div>
+</div>
+
+<div class="portal-toolbar mb-4">
+    <form asp-controller="Catalog" asp-action="Index" method="get" class="row g-3 align-items-center">
+        <div class="col-12 col-md-6 col-lg-5">
+            <label for="catalogSearchInput" class="visually-hidden">Tìm kiếm tên mặt hàng hoặc quy cách</label>
+            <input id="catalogSearchInput" type="search" name="q" value="@Model.SearchQuery"
+                   class="form-control" placeholder="Tìm theo tên mặt hàng hoặc quy cách (ví dụ: Rice, 1 kg)..." />
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="inStockOnlyCheck" name="inStockOnly" value="true" @(Model.InStockOnly ? "checked" : "") />
+                <label class="form-check-label fw-medium" for="inStockOnlyCheck">
+                    Chỉ hiển thị hàng còn tồn kho
+                </label>
+            </div>
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Lọc danh mục</button>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchQuery) || Model.InStockOnly)
+            {
+                <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-secondary">Bỏ lọc</a>
+            }
+        </div>
+        <div class="col-12 col-lg-auto ms-lg-auto text-secondary small tabular-nums">
+            Tổng: <strong>@Model.TotalCatalogCount</strong> mặt hàng · Còn hàng: <strong>@Model.InStockCount</strong> · Hết hàng: <strong>@Model.OutOfStockCount</strong>
+        </div>
+    </form>
+</div>
+
+<div class="portal-panel overflow-hidden">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state-box">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-secondary" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h2 class="h5 mb-2">Không có mặt hàng nào phù hợp</h2>
+            <p class="mb-3">Hiện chưa có sản phẩm trong danh mục hoặc bộ lọc tìm kiếm không khớp kết quả nào.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchQuery) || Model.InStockOnly)
+            {
+                <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-primary btn-sm px-3">
+                    Xem toàn bộ danh mục
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table portal-table">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 90px;">Mã SP</th>
+                        <th scope="col">Tên mặt hàng</th>
+                        <th scope="col">Quy cách (Size)</th>
+                        <th scope="col" class="text-end">Đơn giá bán sỉ</th>
+                        <th scope="col" class="text-end">Tồn kho</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col" class="text-end" style="width: 260px;">Đặt hàng nhanh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (CatalogItemViewModel item in Model.Items)
+                    {
+                        <tr class="@(item.IsInStock ? "" : "row-out-of-stock")">
+                            <td class="text-secondary tabular-nums">#@item.ItemID</td>
+                            <td class="fw-semibold item-title">@item.ItemName</td>
+                            <td class="text-secondary">@item.Size</td>
+                            <td class="text-end fw-semibold tabular-nums">@item.Price.ToString("N0") ₫</td>
+                            <td class="text-end tabular-nums fw-medium">@item.StockQuantity.ToString("N0")</td>
+                            <td>
+                                @if (!item.IsInStock)
+                                {
+                                    <span class="status-badge status-out-of-stock">Hết hàng</span>
+                                }
+                                else if (item.IsLowStock)
+                                {
+                                    <span class="status-badge status-low-stock">Sắp hết (@item.StockQuantity)</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-in-stock">Còn hàng</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (item.IsInStock)
+                                {
+                                    <form asp-controller="Orders" asp-action="Create" method="get" class="d-inline-flex align-items-center justify-content-end gap-2">
+                                        <input type="hidden" name="itemId" value="@item.ItemID" />
+                                        <label for="quickQty_@item.ItemID" class="visually-hidden">Số lượng đặt cho @item.ItemName</label>
+                                        <input id="quickQty_@item.ItemID" type="number" name="quantity" value="1" min="1" max="@item.StockQuantity"
+                                               class="form-control form-control-sm text-end tabular-nums" style="width: 82px;" />
+                                        <button type="submit" class="btn btn-b2b-primary btn-sm px-3">
+                                            Chọn đặt
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="d-inline-flex align-items-center justify-content-end gap-2">
+                                        <input type="number" value="0" class="form-control form-control-sm text-end tabular-nums" style="width: 82px;" disabled aria-disabled="true" />
+                                        <button type="button" class="btn btn-secondary btn-sm px-3" disabled aria-disabled="true">
+                                            Hết hàng
+                                        </button>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
