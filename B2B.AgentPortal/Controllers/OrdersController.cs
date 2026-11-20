@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace B2B.AgentPortal.Controllers;
 
 [Authorize(Roles = AgentPortalClaims.AgentRole)]
-public class OrdersController : Controller
+public partial class OrdersController : Controller
 {
     private readonly IOrderService _orderService;
     private readonly B2BDbContext _dbContext;

@@ -1,0 +1,93 @@
+@model List<OrderSummaryVm>
+@{
+    ViewData["Title"] = "My Orders";
+    string Badge(string s) => s switch
+    {
+        "Pending"   => "text-bg-warning",
+        "Confirmed" => "text-bg-info",
+        "Shipped"   => "text-bg-primary",
+        "Delivered" => "text-bg-success",
+        "Cancelled" => "text-bg-secondary",
+        _           => "text-bg-light"
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h1 class="h3 m-0">Đơn hàng của tôi (My Orders)</h1>
+        <p class="text-secondary small mb-0 mt-1">Chỉ hiển thị các đơn đặt hàng thuộc đại lý đang đăng nhập.</p>
+    </div>
+    <a class="btn btn-b2b-primary" asp-controller="Orders" asp-action="Create">
+        <i class="bi bi-plus-lg me-1"></i>Đặt hàng mới
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="portal-panel empty-state text-center">
+        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+        <p class="mb-3">Bạn chưa có đơn hàng nào.</p>
+        <a class="btn btn-b2b-primary" asp-controller="Catalog" asp-action="Index">
+            <i class="bi bi-grid me-1"></i>Xem catalog và đặt hàng
+        </a>
+    </div>
+}
+else
+{
+    <div class="portal-panel p-3 p-md-4">
+        <div class="table-responsive">
+            <table id="ordersTable" class="table table-hover align-middle w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Số dòng</th>
+                        <th class="text-end">Tổng tiền</th>
+                        <th class="text-end no-sort">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var o in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold tabular-nums">#@o.OrderId</td>
+                            <td class="tabular-nums" data-order="@o.OrderDate.ToString("yyyyMMddHHmmss")">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="badge @Badge(o.OrderStatus)">@o.OrderStatus</span></td>
+                            <td class="text-end tabular-nums">@o.LineCount</td>
+                            <td class="text-end fw-semibold tabular-nums" data-order="@o.Total">@o.Total.ToString("N0") ₫</td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@o.OrderId">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                                <a class="btn btn-outline-primary btn-sm" asp-action="Invoice" asp-route-id="@o.OrderId" target="_blank" rel="noopener">
+                                    <i class="bi bi-printer me-1"></i>Hóa đơn
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            if ($.fn.DataTable) {
+                $('#ordersTable').DataTable({
+                    order: [[1, 'desc']],
+                    columnDefs: [{ targets: 'no-sort', orderable: false }],
+                    language: {
+                        search: 'Tìm:',
+                        lengthMenu: 'Hiện _MENU_ dòng',
+                        info: '_START_–_END_ / _TOTAL_ đơn',
+                        zeroRecords: 'Không có đơn phù hợp',
+                        paginate: { previous: 'Trước', next: 'Sau' }
+                    }
+                });
+            }
+        });
+    </script>
+}

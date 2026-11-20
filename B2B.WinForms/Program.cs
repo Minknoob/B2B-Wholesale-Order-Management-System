@@ -1,4 +1,3 @@
-
 using B2B.WinForms.Forms;
 
 namespace B2B.WinForms;

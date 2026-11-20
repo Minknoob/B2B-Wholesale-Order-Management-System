@@ -1,5 +1,4 @@
 # Build output & local secrets (B2B Wholesale)
-# Build output
 **/bin/
 **/obj/
 .vs/
